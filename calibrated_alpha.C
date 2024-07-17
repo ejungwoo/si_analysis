@@ -7,7 +7,7 @@ void calibrated_alpha()
     double conversion_factor[5][33] = {0};
     ifstream fcal("data/calibration_file.txt");
     while (fcal >> i >> j >> mean >> sigma)
-        conversion_factor[i][j] = 5.44/mean;
+        conversion_factor[i][j] = 5.486/mean;
 
     auto file = new TFile("data/RUN511.ch.root","read");
     auto tree = (TTree*) file -> Get("channels");
@@ -37,7 +37,7 @@ void calibrated_alpha()
             hist -> GetXaxis() -> SetLabelSize(0.065);
             hist -> GetYaxis() -> SetLabelSize(0.065);
 
-            TString selection =  Form("adc*%f>>%s",conversion_factor[det][dch],nameHist.Data());
+            TString selection = Form("adc*%f>>%s",conversion_factor[det][dch],nameHist.Data());
             cout << selection << endl;
             tree -> Draw(selection,cut);
         }
