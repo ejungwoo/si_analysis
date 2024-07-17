@@ -1,4 +1,4 @@
-void analysis_alpha()
+void analyze_alpha()
 {
     gStyle -> SetTitleSize(0.09,"t"); // set title size on the top of the histograms
 
