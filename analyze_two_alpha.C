@@ -61,9 +61,10 @@ void analyze_two_alpha()
 
             auto fit = new TF1("fit",FxTwoAlpha,x1,x2,4);
             fit -> SetParameters(adcOffset,energyResolution,mean,amplitude); // set initial parameter
-            fit -> SetParLimits(0,0,0); // set initial parameter
+            //fit -> SetParLimits(0,0,0); // set initial parameter
+            fit -> FixParameter(0,0); // set initial parameter
             fit -> SetRange(mean - 0.5*sigma, mean + 3*sigma); // set initial range
-            hist -> Fit(fit,"RQ");
+            hist -> Fit(fit,"RQN0");
 
             //if (1) { // set range from the previous fit and perform fit
             //    amplitude = fit -> GetParameter(0);
@@ -84,8 +85,11 @@ void analyze_two_alpha()
             auto fit_peak2 = new TF1("fit_peak2","gaus(0)",x1,x2);
             fit_peak1 -> SetParameters(amplitude1, mean1, sigma1);
             fit_peak2 -> SetParameters(amplitude2, mean2, sigma2);
+            fit_peak1 -> SetLineColor(kBlue);
+            fit_peak2 -> SetLineColor(kGreen+1);
             fit_peak1 -> Draw("samel");
             fit_peak2 -> Draw("samel");
+            fit -> Draw("samel");
 
             cout << det << " " << dch << " " << mean1 << " " << sigma1 << endl;
             fcal << det << " " << dch << " " << mean1 << " " << sigma1 << endl;
