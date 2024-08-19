@@ -4,32 +4,43 @@ double fAEBR = 6.65625; ///< alpha energy branching ratio = 85.2 / 12.8 = 6.6562
 double FxTwoAlpha(Double_t *xy, Double_t *par);
 void Convert2APParameters(double* par, double &mean1, double &sigma1, double &amplitude1, double &mean2, double &sigma2, double &amplitude2);
 
-void analyze_two_alpha()
+void analyze_two_alpha(int runNo=511)
 {
     gStyle -> SetTitleSize(0.09,"t"); // set title size on the top of the histograms
 
-    ofstream fcal("data/calibration_file.txt");
-
-    auto file = new TFile("data/RUN511.ch.root","read");
+    auto file = new TFile(Form("data/RUN%d.ch.root",runNo),"read");
+    file -> ls();
     auto tree = (TTree*) file -> Get("channels");
 
-    for (auto det : {2})
-    //for (auto det : {2,3,4})
+    vector<int> detectors = {2,3,4};
+    if (runNo==515) {
+        detectors.clear();
+        detectors.push_back(1);
+    }
+
+    for (auto det : detectors)
     {
+        TString calName = Form("data/calibration_file_det%d.txt",det);
+        ofstream fcal(calName);
+
         // set expected adc ranges
         double x1 = 1450;
         double x2 = 1600;
-        if (det==3 || det==4) {
-            x1 = 2800;
-            x2 = 3200;
-        }
+        int max_channels = 32;
+        if      (det==1) { x1 = 1500; x2 = 2500; max_channels = 12; }
+        else if (det==2) { x1 = 1450; x2 = 1600; }
+        else if (det==3) { x1 = 2800; x2 = 3200; max_channels = 24; }
+        else if (det==4) { x1 = 2800; x2 = 3200; }
 
         auto cvs1 = new TCanvas(Form("analysis_alpha_det%d_1",det),"cvs1",1200,700);
         cvs1 -> Divide(4,4);
-        auto cvs2 = new TCanvas(Form("analysis_alpha_det%d_2",det),"cvs2",1200,700);
-        cvs2 -> Divide(4,4);
+        TCanvas* cvs2 = nullptr;
+        if (max_channels>16) {
+            cvs2 = new TCanvas(Form("analysis_alpha_det%d_2",det),"cvs2",1200,700);
+            cvs2 -> Divide(4,4);
+        }
 
-        for (auto dch=1; dch<=32; ++dch)
+        for (auto dch=1; dch<=max_channels; ++dch)
         {
             // set expected adc ranges
             if (det==3 && (dch==22 || dch==23)) {
@@ -95,8 +106,11 @@ void analyze_two_alpha()
             fcal << det << " " << dch << " " << mean1 << " " << sigma1 << endl;
         }
 
-        cvs1 -> cd(); cvs1 -> SaveAs(Form("figures/%s.pdf",cvs1->GetName()));
-        cvs1 -> cd(); cvs2 -> SaveAs(Form("figures/%s.pdf",cvs2->GetName()));
+        if (cvs1!=nullptr) { cvs1 -> cd(); cvs1 -> SaveAs(Form("figures/%s.png",cvs1->GetName())); }
+        if (cvs2!=nullptr) { cvs2 -> cd(); cvs2 -> SaveAs(Form("figures/%s.png",cvs2->GetName())); }
+        
+        fcal.close();
+        cout << calName << endl;
     }
 }
 
